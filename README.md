@@ -1,8 +1,8 @@
 # International--Breweries-Report
 From the international breweries data recorded for a duration of three years, you are directed to do the following analyses to aid better decision making in order to maximize profit and reduce loss to the lowest minimum
 
-CASE QUESTIONS
-# Profit---Analyses-
+# CASE QUESTIONS
+Profit Analysis
 1. Within the space of the last three years, what was the profit worth of the breweries,
 inclusive of the anglophone and the francophone territories?
 2. Compare the total profit between these two territories in order for the territory manager,
