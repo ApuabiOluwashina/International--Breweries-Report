@@ -1,0 +1,219 @@
+-- Database: International Breweries
+
+-- DROP DATABASE IF EXISTS "International Breweries";
+
+CREATE DATABASE "International Breweries"
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'English_Nigeria.1252'
+    LC_CTYPE = 'English_Nigeria.1252'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+	
+	CREATE TABLE INT_BREW (
+    SALES_ID numeric,
+    SALES_REP varchar(50),
+    EMAILS varchar(50),
+	BRANDS varchar(50),
+	PRICE_COST numeric,
+	UNIT_PRICE numeric,
+	QUANTITY numeric,
+	COSTS numeric,
+	PROFIT numeric,
+	COUNTRIES varchar(50),
+	REGION varchar(50),
+	MONTHS varchar(50),
+	YEARS numeric
+  );
+  
+SELECT * FROM INT_BREW;
+
+DROP TABLE INT_BREW;
+
+--Import Dataset into the table
+
+COPY INT_BREW(SALES_ID,SALES_REP,EMAILS,BRANDS,PRICE_COST,UNIT_PRICE,QUANTITY,COSTS,PROFIT,COUNTRIES,REGION,MONTHS,YEARS)
+FROM 'C:\Users\USER\Desktop\International_Breweries_plc.csv'DELIMITER',';
+
+-----PROFIT ANALYSIS
+
+-----N105,587,420 as the total profit
+SELECT SUM(PROFIT) AS TOTAL_PROFIT
+FROM INT_BREW;
+
+--Case1b Territorial Profit
+SELECT SALES_ID,SALES_REP,EMAILS,BRANDS,PRICE_COST,UNIT_PRICE,QUANTITY,COSTS,PROFIT,COUNTRIES,REGION,MONTHS,YEARS,
+CASE
+    WHEN COUNTRIES ='Nigeria' THEN 'Anglophone'
+    WHEN COUNTRIES = 'Ghana' THEN 'Anglophone'
+    ELSE 'Francophone'
+END AS TERRITORIES
+FROM INT_BREW;
+
+---Anglophone Profit N42,389,260
+SELECT SUM(Profit) AS Total_Profit
+FROM INT_BREW
+WHERE COUNTRIES='Nigeria' OR COUNTRIES='Ghana';
+
+---Francophone Profit N84,211,210
+SELECT SUM(Profit) AS Total_Profit
+FROM INT_BREW
+WHERE NOT COUNTRIES='Nigeria' OR COUNTRIES='Ghana';
+
+---Ghana had the highest profit in 2019 with N7,144,070
+SELECT SUM(PROFIT), COUNTRIES
+FROM INT_BREW
+WHERE YEARS='2019'
+GROUP BY COUNTRIES
+ORDER BY SUM(PROFIT) DESC;
+
+---Year 2017 had the highest profit at N38,503,320
+SELECT SUM(PROFIT) AS Total_Profit , YEARS
+FROM INT_BREW
+GROUP BY YEARS
+ORDER BY SUM(PROFIT) DESC;
+
+---April had the least Profit in all the Months in the three years
+SELECT SUM(PROFIT) AS Total_Profit , MONTHS
+FROM INT_BREW
+GROUP BY MONTHS
+ORDER BY SUM(PROFIT);
+
+---N38,150 was the minimum profit in December 2018
+SELECT PROFIT AS Total_Profit, MONTHS, YEARS
+FROM INT_BREW
+WHERE MONTHS= 'December' AND YEARS= '2018' 
+ORDER BY PROFIT;
+
+---N30,020,250 was the Total profit in 2019
+SELECT SUM(PROFIT) AS Total_Profit
+FROM INT_BREW
+WHERE YEARS= '2019';
+
+---Compare the profit in percentage for each of the month in 2019
+SELECT SUM(PROFIT/30020250)*100 AS Percentage_Profit , MONTHS
+FROM INT_BREW
+WHERE YEARS=2019
+GROUP BY MONTHS
+ORDER BY SUM(PROFIT/30020250) DESC;
+
+---Which particular brand generated the highest profit in Senegal
+SELECT SUM(PROFIT) AS Highest_Profit , BRANDS
+FROM INT_BREW
+WHERE COUNTRIES='Senegal'
+GROUP BY BRANDS
+ORDER BY SUM(PROFIT) DESC;
+
+----------BRAND ANALYSIS
+-----Within the last two years, the brand manager wants to know the top three brands consumed in the francophone countries
+SELECT BRANDS, SUM(QUANTITY) AS TOTAL_QUANTITY_SOLD
+FROM INT_BREW
+WHERE NOT COUNTRIES= 'Nigeria' AND NOT COUNTRIES= 'Ghana' AND (YEARS=2017 OR YEARS=2018)
+GROUP BY BRANDS
+ORDER BY SUM(QUANTITY) DESC
+LIMIT 3;
+
+----Find out the top two choice of consumer brands in Ghana
+
+SELECT BRANDS, SUM(QUANTITY)
+FROM INT_BREW
+WHERE COUNTRIES= 'Ghana'
+GROUP BY BRANDS
+ORDER BY SUM(QUANTITY) DESC
+LIMIT 2;
+
+---Find out the details of beers consumed in the past three years in the most oil reached country in West Africa
+
+SELECT BRANDS, SUM(QUANTITY) AS QUANTITY_SOLD
+FROM INT_BREW
+WHERE NOT BRANDS= 'beta malt' AND NOT BRANDS= 'grand malt' AND COUNTRIES= 'Nigeria'
+GROUP BY BRANDS
+ORDER BY SUM(QUANTITY) DESC;
+
+------Favorites malt brand in Anglophone region between 2018 and 2019
+
+SELECT BRANDS, SUM(QUANTITY) AS QUANTITY_SOLD
+FROM INT_BREW
+WHERE (BRANDS= 'grand malt' OR BRANDS= 'beta malt') AND (COUNTRIES='Nigeria' OR COUNTRIES='Ghana') AND (YEARS=2018 OR YEARS=2019)
+GROUP BY BRANDS
+ORDER BY SUM(QUANTITY) DESC;
+
+-----Which brands sold the highest in 2019 in Nigeria
+
+SELECT BRANDS, SUM(QUANTITY) AS QUANTITY_SOLD
+FROM INT_BREW
+WHERE COUNTRIES= 'Nigeria' OR YEARS= 2019
+GROUP BY BRANDS
+ORDER BY SUM(QUANTITY) DESC;
+
+---Favorites brand in South_South region in Nigeria
+
+SELECT BRANDS, SUM(QUANTITY) AS NO_OF_UNIT_SOLD
+FROM INT_BREW
+WHERE COUNTRIES= 'Nigeria' AND REGION= 'southsouth'
+GROUP BY BRANDS
+ORDER BY SUM(QUANTITY) DESC
+LIMIT 1;
+
+------Bear consumption in Nigeria
+
+SELECT BRANDS, SUM(QUANTITY) AS AMOUNT_CONSUMED
+FROM INT_BREW
+WHERE (NOT BRANDS= 'beta malt' AND NOT BRANDS= 'grand malt') AND COUNTRIES= 'Nigeria'
+GROUP BY BRANDS
+ORDER BY SUM(QUANTITY) DESC;
+
+----Level of consumption of Budweiser in the regions in Nigeria
+
+SELECT REGION, SUM(QUANTITY) AS AMOUNT_CONSUMED
+FROM INT_BREW
+WHERE BRANDS= 'budweiser' AND  COUNTRIES= 'Nigeria'
+GROUP BY REGION
+ORDER BY SUM(QUANTITY) DESC;
+
+-----Level of consumption of Budweiser in the regions in Nigeria in 2019 (Decision on Promo)
+
+SELECT REGION, SUM(QUANTITY) AS AMOUNT_CONSUMED
+FROM INT_BREW
+WHERE BRANDS= 'budweiser' AND  COUNTRIES= 'Nigeria' AND YEARS= 2019
+GROUP BY REGION
+ORDER BY SUM(QUANTITY);
+
+--------COUNTRIES ANALYSIS
+
+---Country with the highest consumption of beer
+
+SELECT COUNTRIES, SUM(QUANTITY) AS NUMBER_OF_BEER_CONSUMED
+FROM INT_BREW
+WHERE NOT BRANDS= 'beta malt' AND NOT BRANDS= 'grand malt'
+GROUP BY COUNTRIES
+ORDER BY SUM(QUANTITY) DESC
+LIMIT 1;
+
+-----Highest sales personnel of Budweiser in Senegal base on profit
+
+SELECT SALES_REP, SUM(PROFIT)
+FROM INT_BREW
+WHERE BRANDS= 'budweiser' AND COUNTRIES= 'Senegal'
+GROUP BY SALES_REP
+ORDER BY SUM(PROFIT) DESC
+LIMIT 1;
+
+
+------Country with the highest profit of the fourth quarter in 2019
+
+SELECT COUNTRIES, SUM(PROFIT) AS FOURTH_QUARTER_PROFIT
+FROM INT_BREW
+WHERE (MONTHS= 'October' OR MONTHS= 'November' OR MONTHS= 'December') AND YEARS= 2019
+GROUP BY COUNTRIES
+ORDER BY SUM(PROFIT) DESC;
+
+
+
+
+
+
+
+
+
